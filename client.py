@@ -10,6 +10,7 @@ class Client:
         self.sock = socket.create_connection((self.host, self.port))
 
 
+
     def put(self,metrika,value,timestamp = str(int(time.time()))):
         try:
             message = "put {} {} {}\n".format(metrika,value, timestamp)
@@ -28,7 +29,7 @@ class Client:
         """ создание структуры анных ответа с сервера"""
         result = dict()
         for arg in argv:
-            print("args = ",arg)
+            # print("args = ",arg)
             if arg == "":
                 continue
             m, v, t = self.parse_msg(arg)
@@ -39,20 +40,17 @@ class Client:
 
 
     def get(self,metrika):
-        try:
-            get_result = None
-            message = "get {}\n".format(metrika)
-            self.sock.send(message.encode("utf8"))
-            result = (self.sock.recv(1024)).decode("utf8")     # получить данные с сервера
-            result = result.split("\n")
-            print(result)
-            if "ok" == result[0]:
-                get_result = self.create_data(result[1:])
-                print(get_result)
-        except ClientError:
-            raise ClientError("get_client_error")
-        # if get_result == {}:
-        #     return ClientError()
+        get_result = None
+        message = "get {}\n".format(metrika)
+        self.sock.send(message.encode("utf8"))
+        result = (self.sock.recv(1024)).decode("utf8")     # получить данные с сервера
+        result = result.split("\n")
+        # print(result)
+        if "ok" == result[0]:
+            get_result = self.create_data(result[1:])
+            # print(get_result)
+        elif "error" == result[0]:
+            raise ClientError(result[1])
         return get_result
 
 
