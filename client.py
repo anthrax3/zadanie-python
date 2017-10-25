@@ -8,15 +8,21 @@ class Client:
         self.port = port
         self.timeout = timeout
         self.sock = socket.create_connection((self.host, self.port))
-
+        # self.sock.settimeout(self.timeout)
 
 
     def put(self,metrika,value,timestamp = str(int(time.time()))):
-        try:
-            message = "put {} {} {}\n".format(metrika,value, timestamp)
-            self.sock.sendall(message.encode("utf8"))
-        except ClientError:
-            pass
+            message = "put {} {} {}\n".format(metrika,value,timestamp)
+            self.sock.send(message.encode("utf8"))
+            result = (self.sock.recv(1024)).decode("utf8")  # получить данные с сервера
+            result = result.split("\n")
+            # print(result)
+            if "error" == result[0]:
+                raise ClientError(result[1])
+            return result
+
+
+
 
     def parse_msg(self, str):
         """ Парсинг строки сообщения типа:  метрика значение timestamp """
