@@ -1,4 +1,5 @@
-import asyncio
+import socket
+import time
 
 class Client:
 
@@ -6,41 +7,54 @@ class Client:
         self.host = host
         self.port = port
         self.timeout = timeout
+        self.sock = socket.create_connection((self.host, self.port))
 
-    async def put_message(self,message,loop):
+
+    def put(self,metrika,value,timestamp = str(int(time.time()))):
         try:
-            reader, writer = await asyncio.open_connection(self.host, self.port,loop = loop)
-            # message = "put {} {} {}\n".format(metric,value,timestamp)
-            print("send:  {}".format(message))
-            writer.write(message.encode())
-            writer.close()
-        except Exception:
-            raise ClientError
+            message = "put {} {} {}\n".format(metrika,value, timestamp)
+            self.sock.sendall(message.encode("utf8"))
+        except ClientError:
+            pass
 
-    def put(self,metric, value, timestamp):
-        loop = asyncio.get_event_loop()
-        message = "put {} {} {}\n".format(metric,value,timestamp)
-        loop.run_until_complete(self.put_message(message,loop))
-        loop.close()
+    def parse_msg(self, str):
+        """ Парсинг строки сообщения типа:  метрика значение timestamp """
+        result = str.split(" ")
+        if len(result)!=3:
+            return "","",""
+        return result[0], (float) (result[1]), (int) (result[2])
 
-
-    async def get_message(self,message,loop):
-        try:
-            reader, writer = await asyncio.open_connection(self.host, self.port,loop = loop)
-            print("send:  {}".format(message))
-            result = writer.write(message.encode())
-            writer.close()
-        except Exception:
-            return ""
+    def create_data(self, argv):
+        """ создание структуры анных ответа с сервера"""
+        result = dict()
+        for arg in argv:
+            print("args = ",arg)
+            if arg == "":
+                continue
+            m, v, t = self.parse_msg(arg)
+            if not(m in result):
+                result[m] = list()
+            result[m].append((t, v))
         return result
 
 
-    def get(self,metric):
-        loop = asyncio.get_event_loop()
-        message = "get {}\n".format(metric)
-        result = loop.run_until_complete(self.get_message(message,loop))
-        loop.close()
-        return result
+    def get(self,metrika):
+        try:
+            get_result = None
+            message = "get {}\n".format(metrika)
+            self.sock.send(message.encode("utf8"))
+            result = (self.sock.recv(1024)).decode("utf8")     # получить данные с сервера
+            result = result.split("\n")
+            print(result)
+            if "ok" == result[0]:
+                get_result = self.create_data(result[1:])
+                print(get_result)
+        except ClientError:
+            raise ClientError("get_client_error")
+        # if get_result == {}:
+        #     return ClientError()
+        return get_result
+
 
 class ClientError(Exception):
     pass
