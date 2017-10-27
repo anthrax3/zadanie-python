@@ -22,8 +22,6 @@ class Client:
             return result
 
 
-
-
     def parse_msg(self, str):
         """ Парсинг строки сообщения типа:  метрика значение timestamp """
         result = str.split(" ")
@@ -62,3 +60,8 @@ class Client:
 
 class ClientError(Exception):
     pass
+
+cl =Client("127.0.0.1","9999")
+
+while True:
+    print(cl.get("*"))
