@@ -48,6 +48,7 @@ class Client:
         message = "get {}\n".format(metrika)
         self.sock.send(message.encode("utf8"))
         result = (self.sock.recv(1024)).decode("utf8")     # получить данные с сервера
+        print("get result: ",result)
         result = result.split("\n")
         # print(result)
         if "ok" == result[0]:
@@ -62,6 +63,16 @@ class ClientError(Exception):
     pass
 
 cl =Client("127.0.0.1","9999")
+#
+# while True:
+#     print(cl.get("*"))
+#     time.sleep(1)
 
-while True:
-    print(cl.get("*"))
+print(cl.get("*"))
+time.sleep(1)
+
+print(cl.put("m","12.0"))
+time.sleep(1)
+
+print(cl.get("m"))
+time.sleep(1)

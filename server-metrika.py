@@ -34,20 +34,20 @@ class DataServer:
         return result
 
     def get_all(self):
-        # result = ""
-        # for key in self.data:
-        #     value = ""
-        #     for i in sorted(self.data[key]):
-        #         # print("i = ", i)
-        #         value += "{} {} {}\n".format(key, i[1], i[0])
-        #     result += value
-        return self.data.__str__()
-
+        result = ""
+        for key in self.data:
+            value = ""
+            for i in sorted(self.data[key]):
+                # print("i = ", i)
+                value += "{} {} {}\n".format(key, i[1], i[0])
+            result += value
+        return result
 
 class ClientServerProtocol(asyncio.Protocol):
     """ реализация протокола сервера"""
-    def __init__(self):
-        self.data_server = DataServer()
+    # def __init__(self):
+    #     self.data_server = DataServer()
+    data_server = DataServer()
 
     def connection_made(self, transport):
         self.transport = transport
@@ -57,7 +57,7 @@ class ClientServerProtocol(asyncio.Protocol):
             resp = self.parse_data(data.decode())
             # print(resp)
         except UnicodeDecodeError:
-            self.transport.write("error\n".encode())
+            resp = "error\n"
         self.transport.write(resp.encode())
 
     def parse_data(self, str):
